@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="CrazyRisk.Consola/CrazyRisk.Consola.csproj" Id="7818ff67-8a82-4768-a10c-2bb8598fa89c" />
   <Project Path="CrazyRisk.Logic/CrazyRisk.Logic.csproj" />
   <Project Path="CrazyRisk.Server/CrazyRisk.Server.csproj" />
   <Project Path="CrazyRisk.UI/CrazyRisk.UI.csproj" />

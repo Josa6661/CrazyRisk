@@ -10,8 +10,16 @@ namespace CrazyRisk.Logic
         public ListaSimple<Jugador> Jugadores { get; private set; }
         public Jugador? JugadorEnTurno { get; private set; }
 
+        private Random azar = new Random();
+        private bool planeacionUsadaEsteTurno = false;
+        public int dadosDefensor = 2; 
+        // Serie de Fibonacci a partir de 2 para los canjes
+        private int[] fibonacci = new int[] { 2, 3, 5, 8, 13, 21, 34, 55, 89, 144 };
+
+
         public FaseDeJuego FaseActual { get; private set; }
         public int IndiceJugadorColocandoTropas { get; private set; }
+        
         public Juego()
         {
             MapaDelJuego = new Mapa();
@@ -38,7 +46,7 @@ namespace CrazyRisk.Logic
 
             // Crear continentes
 
-            Continente americaDelNorte = new Continente("América del Norte", 5);
+            Continente americaDelNorte = new Continente("América del Norte", 3);
             Continente americaDelSur = new Continente("América del Sur", 2);
             Continente europa = new Continente("Europa", 5);
             Continente africa = new Continente("África", 3);
@@ -468,8 +476,7 @@ namespace CrazyRisk.Logic
             if (tropasYaColocadas < TropasInicialesParaColocar(neutral))
             {
                 // Elige un territorio al azar de los suyos y le pone una tropa
-                Random rand = new Random();
-                int indiceTerritorioAzar = rand.Next(0, neutral.Territorios.Cantidad);
+                int indiceTerritorioAzar = azar.Next(0, neutral.Territorios.Cantidad);
                 Territorio territorioAzar = neutral.Territorios.Obtener(indiceTerritorioAzar);
                 territorioAzar.Tropas++;
             }
@@ -497,10 +504,107 @@ namespace CrazyRisk.Logic
             }
 
             JugadorEnTurno = jugador;
+            planeacionUsadaEsteTurno = false;
 
-            // Calculamos los refuerzos. Más adelante, la UI usará este número para que
-            // el jugador pueda colocar estas tropas donde quiera.
-            int refuerzos = CalcularRefuerzos(jugador);
+            int refuerzosExtra = 0; 
+
+            while (JugadorEnTurno.Tarjetas.Cantidad >= 6)
+            {
+                int inf = 0;
+                int cab = 0;
+                int art = 0;
+
+                int i = 0;
+                while (i < JugadorEnTurno.Tarjetas.Cantidad)
+                {
+                    Tarjeta t = JugadorEnTurno.Tarjetas.Obtener(i);
+                    if (t.Tipo == TipoTarjeta.Infanteria) inf = inf + 1;
+                    if (t.Tipo == TipoTarjeta.Caballeria) cab = cab + 1;
+                    if (t.Tipo == TipoTarjeta.Artilleria) art = art + 1;
+                    i = i + 1;
+                }
+
+                bool canjeado = false;
+
+                // 3 iguales
+                if (inf >= 3)
+                {
+                    int removidas = 0; i = 0;
+                    while (i < JugadorEnTurno.Tarjetas.Cantidad && removidas < 3)
+                    {
+                        if (JugadorEnTurno.Tarjetas.Obtener(i).Tipo == TipoTarjeta.Infanteria)
+                        {
+                            JugadorEnTurno.Tarjetas.Remover(i);
+                            removidas = removidas + 1;
+                        }
+                        else { i = i + 1; }
+                    }
+                    canjeado = true;
+                }
+                else if (cab >= 3)
+                {
+                    int removidas = 0; i = 0;
+                    while (i < JugadorEnTurno.Tarjetas.Cantidad && removidas < 3)
+                    {
+                        if (JugadorEnTurno.Tarjetas.Obtener(i).Tipo == TipoTarjeta.Caballeria)
+                        {
+                            JugadorEnTurno.Tarjetas.Remover(i);
+                            removidas = removidas + 1;
+                        }
+                        else { i = i + 1; }
+                    }
+                    canjeado = true;
+                }
+                else if (art >= 3)
+                {
+                    int removidas = 0; i = 0;
+                    while (i < JugadorEnTurno.Tarjetas.Cantidad && removidas < 3)
+                    {
+                        if (JugadorEnTurno.Tarjetas.Obtener(i).Tipo == TipoTarjeta.Artilleria)
+                        {
+                            JugadorEnTurno.Tarjetas.Remover(i);
+                            removidas = removidas + 1;
+                        }
+                        else { i = i + 1; }
+                    }
+                    canjeado = true;
+                }
+                else if (inf >= 1 && cab >= 1 && art >= 1)
+                {
+                    // 1 de cada tipo
+                    i = 0;
+                    bool q1 = false, q2 = false, q3 = false;
+                    while (i < JugadorEnTurno.Tarjetas.Cantidad && (q1 == false || q2 == false || q3 == false))
+                    {
+                        TipoTarjeta tt = JugadorEnTurno.Tarjetas.Obtener(i).Tipo;
+                        if (q1 == false && tt == TipoTarjeta.Infanteria) { JugadorEnTurno.Tarjetas.Remover(i); q1 = true; }
+                        else if (q2 == false && tt == TipoTarjeta.Caballeria) { JugadorEnTurno.Tarjetas.Remover(i); q2 = true; }
+                        else if (q3 == false && tt == TipoTarjeta.Artilleria) { JugadorEnTurno.Tarjetas.Remover(i); q3 = true; }
+                        else { i = i + 1; }
+                    }
+                    canjeado = true;
+                }
+
+                if (canjeado == true)
+                {
+                    int indice = MapaDelJuego.ContadorIntercambiosGlobal;
+                    if (indice < 0) indice = 0;
+                    if (indice >= fibonacci.Length) indice = fibonacci.Length - 1;
+
+                    refuerzosExtra = refuerzosExtra + fibonacci[indice];
+                    MapaDelJuego.ContadorIntercambiosGlobal = MapaDelJuego.ContadorIntercambiosGlobal + 1;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            int refuerzosBase = CalcularRefuerzos(jugador);
+            int refuerzos = refuerzosBase + refuerzosExtra;
+            // >>> aquí la UI puede usar 'refuerzos' para colocarlos donde el jugador decida <<<
+
+
         }
 
         private int CalcularRefuerzos(Jugador jugador)
@@ -535,39 +639,78 @@ namespace CrazyRisk.Logic
 
         public void ResolverAtaque(Territorio territorioAtacante, Territorio territorioDefensor, int tropasParaAtaque)
         {
-            // --- PASO 1, 2 y 3 (quedan exactamente igual) ---
-            #region Validaciones y Dados
             if (FaseActual != FaseDeJuego.Jugando) return;
             if (territorioAtacante.Propietario != JugadorEnTurno) return;
             if (territorioAtacante.Propietario == territorioDefensor.Propietario) return;
             if (territorioAtacante.Tropas < 2) return;
-            if (tropasParaAtaque >= territorioAtacante.Tropas) return;
 
-            Random dados = new Random();
+            // Validar adyacencia (simple)
+            bool ady = false;
+            int k = 0;
+            while (k < territorioAtacante.TerritoriosAdyacentes.Cantidad)
+            {
+                if (territorioAtacante.TerritoriosAdyacentes.Obtener(k) == territorioDefensor)
+                {
+                    ady = true; break;
+                }
+                k = k + 1;
+            }
+            if (ady == false) return;
+
+            // Limitar dados del atacante a 1..3 y a las tropas disponibles (dejando 1)
+            int dadosAtk = tropasParaAtaque;
+            if (dadosAtk < 1) dadosAtk = 1;
+            int maxAtk = territorioAtacante.Tropas - 1;
+            if (maxAtk > 3) maxAtk = 3;
+            if (dadosAtk > maxAtk) dadosAtk = maxAtk;
+
+            // Dados del defensor: la UI puede poner 1 o 2 en 'dadosDefensor' (campo público)
+            int dadosDef = dadosDefensor;
+            if (dadosDef < 1) dadosDef = 1;
+            if (dadosDef > 2) dadosDef = 2;
+            if (dadosDef > territorioDefensor.Tropas) dadosDef = territorioDefensor.Tropas;
+
+            // Tiradas
             ListaSimple<int> resultadosAtacante = new ListaSimple<int>();
-            for (int i = 0; i < tropasParaAtaque; i++) { resultadosAtacante.Agregar(dados.Next(1, 7)); }
-
-            int tropasParaDefensa = territorioDefensor.Tropas >= 2 ? 2 : 1;
             ListaSimple<int> resultadosDefensor = new ListaSimple<int>();
-            for (int i = 0; i < tropasParaDefensa; i++) { resultadosDefensor.Agregar(dados.Next(1, 7)); }
 
+            int i = 0;
+            while (i < dadosAtk)
+            {
+                resultadosAtacante.Agregar(azar.Next(1, 7));
+                i = i + 1;
+            }
+
+            i = 0;
+            while (i < dadosDef)
+            {
+                resultadosDefensor.Agregar(azar.Next(1, 7));
+                i = i + 1;
+            }
+
+            // Ordenar de mayor a menor (tu función actual)
             OrdenarDados(resultadosAtacante);
             OrdenarDados(resultadosDefensor);
 
+            // Comparar por pares
             int comparaciones = resultadosAtacante.Cantidad < resultadosDefensor.Cantidad ? resultadosAtacante.Cantidad : resultadosDefensor.Cantidad;
 
-            for (int i = 0; i < comparaciones; i++)
+            i = 0;
+            while (i < comparaciones)
             {
-                if (resultadosAtacante.Obtener(i) > resultadosDefensor.Obtener(i)) { territorioDefensor.Tropas--; }
-                else { territorioAtacante.Tropas--; }
-            }
-            #endregion
+                int a = resultadosAtacante.Obtener(i);
+                int d = resultadosDefensor.Obtener(i);
 
-            // --- PASO 4: VERIFICAR CONQUISTA (ACTUALIZADO) ---
+                if (a > d) { territorioDefensor.Tropas = territorioDefensor.Tropas - 1; }
+                else { territorioAtacante.Tropas = territorioAtacante.Tropas - 1; }
+
+                i = i + 1;
+            }
+
+            // Conquista: mover >= dadosAtk
             if (territorioDefensor.Tropas <= 0)
             {
-                // Si el defensor ya no tiene tropas, llamamos al nuevo método.
-                ConquistarTerritorio(territorioAtacante, territorioDefensor, tropasParaAtaque);
+                ConquistarTerritorio(territorioAtacante, territorioDefensor, dadosAtk);
             }
         }
 
@@ -594,25 +737,44 @@ namespace CrazyRisk.Logic
             Jugador defensor = territorioDefensor.Propietario;
             Jugador atacante = territorioAtacante.Propietario;
 
-            // 1. Quitar el territorio del defensor
-            // (Necesitaremos añadir un método a nuestra ListaSimple para buscar y remover por objeto)
-            // Lo haremos en el siguiente paso para simplificar.
+            // 1. Quitar el territorio del defensor (búsqueda simple)
+            if (defensor != null)
+            {
+                int i = 0;
+                while (i < defensor.Territorios.Cantidad)
+                {
+                    if (defensor.Territorios.Obtener(i) == territorioDefensor)
+                    {
+                        defensor.Territorios.Remover(i);
+                        break;
+                    }
+                    i = i + 1;
+                }
+            }
 
-            // 2. Cambiar el propietario del territorio
+            // 2. Cambiar propietario
             territorioDefensor.Propietario = atacante;
 
-            // 3. Añadir el territorio a la lista del atacante
+            // 3. Añadir el territorio al atacante
             atacante.Territorios.Agregar(territorioDefensor);
 
-            // 4. Mover las tropas
-            // El atacante debe mover la misma cantidad de tropas que los dados que usó.
-            territorioDefensor.Tropas = tropasDelAtaque;
-            territorioAtacante.Tropas -= tropasDelAtaque;
+            // 4. Mover tropas: al menos los dados usados, dejando 1 en origen
+            int maximoMover = territorioAtacante.Tropas - 1;
+            int minimoMover = tropasDelAtaque;
+            if (minimoMover > maximoMover) minimoMover = maximoMover;
+
+            territorioAtacante.Tropas = territorioAtacante.Tropas - minimoMover;
+            territorioDefensor.Tropas = minimoMover;
+
+            // 5. Dar una tarjeta aleatoria al atacante
+            int r = azar.Next(0, 3);
+            TipoTarjeta tipo;
+            if (r == 0) tipo = TipoTarjeta.Infanteria;
+            else if (r == 1) tipo = TipoTarjeta.Caballeria;
+            else tipo = TipoTarjeta.Artilleria;
+            atacante.Tarjetas.Agregar(new Tarjeta(tipo));
 
             VerificarCondicionDeVictoria();
-
-            // (Opcional: Más adelante se puede dar la opción al jugador de mover más tropas
-            // si lo desea, como dicen las reglas).
         }
 
         // Este método usa un algoritmo (Búsqueda en Profundidad - DFS) para ver si hay un camino.
@@ -655,7 +817,8 @@ namespace CrazyRisk.Logic
             // --- VALIDACIONES ---
             if (origen.Propietario != JugadorEnTurno) return; // El territorio origen debe ser del jugador en turno.
             if (origen.Propietario != destino.Propietario) return; // Ambos territorios deben ser del mismo jugador.
-            if (cantidad >= origen.Tropas) return; // Debe quedar al menos una tropa en el origen[cite: 89].
+            if (cantidad >= origen.Tropas) return; // Debe quedar al menos una tropa en el origen
+            if (planeacionUsadaEsteTurno == true) return;
 
             // Verificamos si existe una ruta de territorios amigos entre el origen y el destino.
             if (!ExisteRutaAmiga(origen, destino, new ListaSimple<Territorio>())) return;

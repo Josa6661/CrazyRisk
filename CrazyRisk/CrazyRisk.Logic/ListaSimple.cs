@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections; // Necesario para IEnumerable
-using System.Collections.Generic; // Necesario para IEnumerable<T>
+using System.Collections;
+using System.Collections.Generic;
 
 namespace CrazyRisk.Logic
 {
-    // Ahora nuestra lista implementa la interfaz IEnumerable<T>
     public class ListaSimple<T> : IEnumerable<T>
     {
         private T[] items;
@@ -16,10 +15,7 @@ namespace CrazyRisk.Logic
             contador = 0;
         }
 
-        public int Cantidad
-        {
-            get { return contador; }
-        }
+        public int Cantidad => contador;
 
         public void Agregar(T nuevoItem)
         {
@@ -39,18 +35,14 @@ namespace CrazyRisk.Logic
         public T Obtener(int indice)
         {
             if (indice < 0 || indice >= contador)
-            {
                 throw new IndexOutOfRangeException("El índice está fuera del rango de la lista.");
-            }
             return items[indice];
         }
 
         public void Remover(int indice)
         {
             if (indice < 0 || indice >= contador)
-            {
                 throw new IndexOutOfRangeException("El índice está fuera del rango de la lista.");
-            }
 
             for (int i = indice; i < contador - 1; i++)
             {
@@ -63,26 +55,48 @@ namespace CrazyRisk.Logic
         public void Set(int indice, T item)
         {
             if (indice >= 0 && indice < contador)
-            {
                 items[indice] = item;
-            }
         }
 
-        // --- MÉTODOS NUEVOS REQUERIDOS POR IEnumerable ---
-        // Este método le permite a WPF recorrer nuestra lista con un bucle (foreach).
-        public IEnumerator<T> GetEnumerator()
+        // Busca un elemento y devuelve su índice, o -1 si no lo encuentra.
+        public int BuscarIndiceDe(T itemBuscado)
         {
             for (int i = 0; i < contador; i++)
             {
-                // La palabra clave "yield return" devuelve los elementos uno por uno.
-                yield return items[i];
+
+                if ((object)items[i] == (object)itemBuscado)
+                {
+                    return i;
+                }
             }
+            return -1;
         }
 
-        // Versión no genérica del método anterior (también requerida).
-        IEnumerator IEnumerable.GetEnumerator()
+        // Elimina un elemento específico de la lista.
+        public bool RemoverElemento(T itemBuscado)
         {
-            return GetEnumerator();
+            int indice = BuscarIndiceDe(itemBuscado);
+            if (indice >= 0)
+            {
+                Remover(indice);
+                return true;
+            }
+            return false;
         }
+
+        // Verifica si un elemento existe en la lista.
+        public bool ContieneElemento(T itemBuscado)
+        {
+            return BuscarIndiceDe(itemBuscado) >= 0;
+        }
+
+        // --- MÉTODOS PARA COMPATIBILIDAD CON WPF ---
+        public IEnumerator<T> GetEnumerator()
+        {
+            for (int i = 0; i < contador; i++)
+                yield return items[i];
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }
