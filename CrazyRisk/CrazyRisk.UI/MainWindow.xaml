@@ -1,0 +1,70 @@
+﻿<Window x:Class="CrazyRisk.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Crazy Risk" Height="720" Width="1280"
+        Background="#2D2D2D">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="300"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="100"/>
+            </Grid.RowDefinitions>
+
+            <ItemsControl Grid.Row="0" ItemsSource="{Binding TodosLosTerritorios}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Canvas Background="#1C1C1C" Margin="10"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Command="{Binding DataContext.TerritorioClickedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                    CommandParameter="{Binding}"
+                    Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}"
+                    Width="50" Height="50">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Grid>
+                                        <Ellipse Fill="Gray" Stroke="White" StrokeThickness="2"/>
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Nombre}" Foreground="White" FontSize="8" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Tropas}" Foreground="White" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Border Grid.Row="1" Background="#1C1C1C" Margin="10,0,10,10">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Button Content="Atacar" Width="120" Height="50" Margin="10"/>
+                    <Button Content="Mover" Width="120" Height="50" Margin="10"/>
+                    <Button Command="{Binding FinalizarTurnoCommand}" 
+                Content="Finalizar Turno" Width="150" Height="50" Margin="10" FontWeight="Bold"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Border Grid.Column="1" Background="#1C1C1C" Margin="0,10,10,10" Padding="15">
+            <StackPanel>
+                <TextBlock Text="ESTADO DEL JUEGO" Foreground="#FFA500" FontSize="22" FontWeight="Bold" Margin="0,0,0,20"/>
+
+                <TextBlock Text="{Binding FaseActualDelJuego}" 
+                   Foreground="White" FontSize="18" Margin="0,0,0,10"/>
+
+                <TextBlock Text="{Binding TurnoActual}" 
+                   Foreground="White" FontSize="18"/>
+
+            </StackPanel>
+        </Border>
+
+    </Grid>
+</Window>

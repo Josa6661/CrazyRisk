@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="CrazyRisk.Logic/CrazyRisk.Logic.csproj" />
+  <Project Path="CrazyRisk.Server/CrazyRisk.Server.csproj" />
+  <Project Path="CrazyRisk.UI/CrazyRisk.UI.csproj" />
+</Solution>
